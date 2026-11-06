@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import { type DataFrame, type TimeRange } from '@grafana/data';
+import { LegendDisplayMode } from '@grafana/schema';
 import { useTheme2 } from '@grafana/ui';
 import { hasVisibleLegendSeries, PlotLegend, type UPlotConfigBuilder } from '@grafana/ui/internal';
 import { type TimeSeriesLegendOptions } from 'app/plugins/panel/timeseries/panelcfg.gen';
@@ -41,7 +42,14 @@ export function TimeSeries(props: TimeSeriesProps) {
 
   const renderLegend = useCallback(
     (uPlotConfig: UPlotConfigBuilder) => {
-      if (!uPlotConfig || (legend && !legend.showLegend) || !hasVisibleLegendSeries(uPlotConfig, frames)) {
+      // A hidden legend still renders its wrapper (empty), which measures to zero height and
+      // would keep GraphNG from ever sizing/rendering the plot — skip it entirely instead.
+      const legendHidden = legend?.displayMode === LegendDisplayMode.Hidden;
+      if (
+        !uPlotConfig ||
+        (legend && (!legend.showLegend || legendHidden)) ||
+        !hasVisibleLegendSeries(uPlotConfig, frames)
+      ) {
         return null;
       }
 

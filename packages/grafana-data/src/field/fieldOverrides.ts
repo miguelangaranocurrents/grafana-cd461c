@@ -69,12 +69,18 @@ export function findNumericFieldMinMax(data: DataFrame[]): NumericRange {
                 max = 0;
               }
             }
-          } else if (!Number.isNaN(v)) {
-            if (min! > v) {
-              min = v;
-            }
-            if (max! < v) {
-              max = v;
+          } else {
+            // A field typed as number can still carry numeric strings (e.g. a reduced column
+            // holding both a text value and a number). Coerce before storing so min/max stay
+            // numbers — downstream code calls Number.prototype.toFixed on them.
+            const num = typeof v === 'number' ? v : Number(v);
+            if (!Number.isNaN(num)) {
+              if (min! > num) {
+                min = num;
+              }
+              if (max! < num) {
+                max = num;
+              }
             }
           }
         }
